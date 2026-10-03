@@ -1,0 +1,23 @@
+'use client';
+import { Icon } from '@/components/icon';
+import { SocialIcon } from './social-icon';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ThemeToggle } from './theme-toggle';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { navigation, profile, socialLinks } from '@/data/portfolio';
+import { timezoneCountry } from '@/data/places';
+const subscribeClock = () => () => {};
+const regionNames = typeof Intl.DisplayNames === 'function' ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
+const regionCountry = () => { const tag = typeof navigator !== 'undefined' ? navigator.language || '' : ''; const region = tag.includes('-') ? (tag.split('-').pop() || '').toUpperCase() : ''; if (!regionNames || !/^[A-Z]{2}$/.test(region)) return ''; try { return regionNames.of(region) || ''; } catch { return ''; } };
+const viewerPlace = () => { const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; const city = (zone.split('/').pop() || '').replace(/_/g, ' '); const country = timezoneCountry[zone] || regionCountry(); if (country && city.toLowerCase() === country.toLowerCase()) return country; return city && country ? `${city}, ${country}` : city || country; };
+export function LiveTime() { const [time, setTime] = useState('--:--:--'); useEffect(() => { const format = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }); const update = () => setTime(format.format(new Date())); update(); const timer = setInterval(update, 1000); return () => clearInterval(timer); }, []); return <span>{time}</span>; }
+export function ViewerLocation() { const place = useSyncExternalStore(subscribeClock, viewerPlace, () => ''); return place ? <span>{place}</span> : null; }
+export function Navbar() { const pathname = usePathname(); const [open, setOpen] = useState(false); const dialog = useRef<HTMLDialogElement>(null); const trigger = useRef<HTMLButtonElement>(null); function close() { dialog.current?.close(); setOpen(false); trigger.current?.focus(); } useEffect(() => { if (!open) return; const prior = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = prior; }; }, [open]); return <header className="header"><div className="nav-wrap"><Link className="wordmark" href="/" aria-label="Precious home">precious<span className="brand-dot"><Icon name="asterisk" /></span></Link><nav aria-label="Main navigation" className="desktop-nav">{navigation.map(n => <Link key={n} href={`/${n.toLowerCase()}`} aria-current={pathname.startsWith(`/${n.toLowerCase()}`) ? 'page' : undefined}>{n}</Link>)}</nav><div className="nav-controls"><ThemeToggle /><button ref={trigger} className="menu-toggle" aria-label="Menu" aria-expanded={open} aria-controls="mobile-menu" onClick={() => { dialog.current?.showModal(); setOpen(true); }}><span className="menu-bars" aria-hidden="true"><i /><i /></span></button></div><div className="nav-location"><ViewerLocation /><LiveTime /></div></div><dialog id="mobile-menu" ref={dialog} onCancel={() => { setOpen(false); trigger.current?.focus(); }} className="mobile-menu"><div className="menu-top"><span className="wordmark">precious<span className="brand-dot"><Icon name="asterisk" /></span></span><button onClick={close} aria-label="Close menu"><span className="menu-bars is-x" aria-hidden="true"><i /><i /></span></button></div><nav aria-label="Mobile navigation">{navigation.map((n, i) => <Link key={n} href={`/${n.toLowerCase()}`} aria-current={pathname.startsWith(`/${n.toLowerCase()}`) ? 'page' : undefined} onClick={close}><span className="mono">0{i + 1}</span>{n}<span><Icon name="arrow-up-right" /></span></Link>)}</nav><div className="menu-bottom"><p><ViewerLocation /> · <LiveTime /></p><Link href="/contact" onClick={close}>Contact details <Icon name="arrow-up-right" /></Link></div></dialog></header>; }
+export function SocialLinks() {
+  return <div className="footer-icons" aria-label="Social and contact links">{socialLinks.map(s => s.href ? <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={`${s.label} (opens in a new tab)`} title={s.label}><SocialIcon label={s.label} /></a> : <span key={s.label} className="unavailable-icon" role="img" aria-label={`${s.label} coming soon`} title={`${s.label} coming soon`}><SocialIcon label={s.label} /></span>)}</div>;
+}
+export function Footer() {
+  return <footer className="footer wrap"><SocialLinks /><div className="footer-credit"><p>{profile.name}</p><p>Built with curiosity and too many iterations.</p></div></footer>;
+}

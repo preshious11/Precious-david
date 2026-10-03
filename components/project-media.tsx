@@ -1,0 +1,3 @@
+import { Icon } from '@/components/icon';
+import Image from 'next/image';
+export function ProjectMedia({ title, color = '#dedfd7', src, className = '' }: { title: string; color?: string; src?: string; className?: string }) { return <div className={`project-media ${className}`} style={{ backgroundColor: color }}>{src ? <Image src={src} alt={title} fill sizes="(max-width: 768px) 100vw, 70vw" /> : <><div className="media-corner mono">P / SELECTED WORK</div><div className="media-composition" aria-hidden><span /><span /><span /></div><strong>{title}</strong><span className="media-caption mono">IMAGE PLACEHOLDER <span><Icon name="arrow-up-right" /></span></span></>}</div>; }

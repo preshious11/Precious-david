@@ -4,3 +4,5 @@ node_modules/
 qa/
 .npm-cache/
 
+.open-next/
+.wrangler/
